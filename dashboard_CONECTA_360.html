@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CONECTA 360 — Dashboard de Priorización Geográfica</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #F6F5F0;
+    color: #2C2C2A;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #3C3489 0%, #534AB7 100%);
+    color: white;
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-brand { display: flex; align-items: center; gap: 14px; }
+  .logo-circle {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: white;
+    color: #534AB7;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 18px;
+  }
+  .header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.2px; }
+  .header-sub { font-size: 11px; opacity: 0.85; margin-top: 2px; }
+  .header-meta { font-size: 11px; opacity: 0.85; text-align: right; }
+  .header-meta strong { color: white; }
+
+  /* CONTAINER */
+  .container { padding: 18px 28px 40px; max-width: 1500px; margin: 0 auto; }
+
+  /* FILTERS BAR */
+  .filters {
+    background: white;
+    border: 1px solid #E0DDD3;
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .filter-group { display: flex; align-items: center; gap: 8px; }
+  .filter-group label { font-size: 11px; font-weight: 600; color: #5F5E5A; text-transform: uppercase; letter-spacing: 0.4px; }
+  .filter-group select {
+    border: 1px solid #D3D1C7;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    background: white;
+    color: #2C2C2A;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .filter-group select:focus { outline: none; border-color: #534AB7; }
+  .filter-pill {
+    background: #EEEDFE;
+    color: #3C3489;
+    padding: 5px 11px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* KPI CARDS */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .kpi {
+    background: white;
+    border: 1px solid #E0DDD3;
+    border-radius: 10px;
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent, #888780);
+  }
+  .kpi-label {
+    font-size: 10px;
+    color: #5F5E5A;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .kpi-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2C2C2A;
+    line-height: 1.1;
+  }
+  .kpi-unit { font-size: 13px; color: #888780; font-weight: 400; }
+  .kpi-delta {
+    margin-top: 6px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .delta-bad { color: #A32D2D; }
+  .delta-good { color: #3B6D11; }
+  .delta-arrow { font-size: 10px; }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid #E0DDD3;
+    margin-bottom: 18px;
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 10px 18px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5F5E5A;
+    transition: all 0.15s;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .tab:hover { color: #2C2C2A; background: #FAF9F4; }
+  .tab.active {
+    color: #534AB7;
+    border-bottom-color: #534AB7;
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* PANELS */
+  .panel-grid {
+    display: grid;
+    gap: 14px;
+  }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 2fr 1fr; }
+  @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: white;
+    border: 1px solid #E0DDD3;
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .panel-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #2C2C2A;
+    margin-bottom: 4px;
+  }
+  .panel-sub {
+    font-size: 11px;
+    color: #888780;
+    margin-bottom: 14px;
+  }
+  .chart-wrap { position: relative; height: 280px; }
+  .chart-wrap-sm { position: relative; height: 220px; }
+  .chart-wrap-lg { position: relative; height: 340px; }
+
+  /* MATRIZ DE PRIORIZACIÓN */
+  table.matriz {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  table.matriz th {
+    text-align: left;
+    padding: 8px 10px;
+    background: #F6F5F0;
+    color: #5F5E5A;
+    font-weight: 600;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #E0DDD3;
+  }
+  table.matriz td {
+    padding: 10px;
+    border-bottom: 1px solid #F1EFE8;
+  }
+  table.matriz tr:hover { background: #FAF9F4; }
+  .badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .badge-critical { background: #FCEBEB; color: #791F1F; }
+  .badge-high { background: #FAEEDA; color: #633806; }
+  .badge-medium { background: #E6F1FB; color: #0C447C; }
+  .badge-low { background: #EAF3DE; color: #27500A; }
+
+  /* HEATMAP */
+  .heatmap {
+    display: grid;
+    grid-template-columns: 80px repeat(6, 1fr);
+    gap: 2px;
+    font-size: 11px;
+  }
+  .heat-h, .heat-rl {
+    padding: 6px 8px;
+    font-weight: 600;
+    color: #5F5E5A;
+    background: #F6F5F0;
+    border-radius: 4px;
+    font-size: 10px;
+    text-align: center;
+  }
+  .heat-rl { text-align: left; }
+  .heat-cell {
+    padding: 8px 6px;
+    text-align: center;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 11px;
+  }
+
+  /* COLOR SYSTEM FOR HEAT */
+  .h-green { background: #C0DD97; color: #173404; }
+  .h-yellow { background: #FAC775; color: #412402; }
+  .h-orange { background: #F0997B; color: #4A1B0C; }
+  .h-red { background: #F0959595; color: #501313; background: #F09595; color: #501313; }
+
+  /* INSIGHT BOX */
+  .insight {
+    background: #EEEDFE;
+    border-left: 3px solid #534AB7;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-top: 14px;
+    font-size: 12px;
+    color: #26215C;
+  }
+  .insight strong { color: #3C3489; }
+
+  .alert-box {
+    background: #FCEBEB;
+    border-left: 3px solid #A32D2D;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-top: 12px;
+    font-size: 11px;
+    color: #501313;
+  }
+  .alert-box strong { color: #791F1F; }
+
+  .footer {
+    text-align: center;
+    padding: 24px 0 0;
+    font-size: 10px;
+    color: #888780;
+    border-top: 1px solid #E0DDD3;
+    margin-top: 30px;
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-brand">
+    <div class="logo-circle">C</div>
+    <div>
+      <h1>CONECTA 360</h1>
+      <div class="header-sub">Dashboard analítico de priorización geográfica · NOC ↔ CRM ↔ NPS</div>
+    </div>
+  </div>
+  <div class="header-meta">
+    <div><strong>Equipo Alegres</strong> · UNAULA 2026</div>
+    <div>Carolina Flórez · Mónica Vega · Juan Camilo Ramírez</div>
+    <div>Período: Ago 2024 — Ene 2025</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- FILTERS -->
+  <div class="filters">
+    <div class="filter-group">
+      <label>Mes</label>
+      <select id="filter-mes">
+        <option value="Ene 2025" selected>Ene 2025</option>
+        <option value="Dic 2024">Dic 2024</option>
+        <option value="Nov 2024">Nov 2024</option>
+        <option value="Oct 2024">Oct 2024</option>
+        <option value="Sep 2024">Sep 2024</option>
+        <option value="Ago 2024">Ago 2024</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Vista regional</label>
+      <select id="filter-region">
+        <option value="Nacional" selected>Nacional</option>
+        <option value="Andina">Andina</option>
+        <option value="Costa">Costa</option>
+        <option value="Bogotá">Bogotá</option>
+        <option value="Sur">Sur</option>
+        <option value="Oriente">Oriente</option>
+      </select>
+    </div>
+    <span class="filter-pill" id="status-pill">Vista activa: Nacional · Ene 2025</span>
+  </div>
+
+  <!-- KPIs PRINCIPALES -->
+  <div class="kpis" id="kpis"></div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" data-tab="integrada">⊕ Vista Integrada (priorización)</button>
+    <button class="tab" data-tab="noc">⬢ NOC: Red e Infraestructura</button>
+    <button class="tab" data-tab="crm">◉ CRM: Churn y ARPU</button>
+    <button class="tab" data-tab="nps">▲ NPS: Satisfacción y Detractores</button>
+  </div>
+
+  <!-- TAB: INTEGRADA -->
+  <div class="tab-content active" id="tab-integrada">
+    <div class="panel-grid grid-3">
+      <div class="panel">
+        <div class="panel-title">Matriz de priorización por región</div>
+        <div class="panel-sub">Lógica de despacho TO-BE: priorización por ARPU en riesgo + concentración geográfica de impacto</div>
+        <table class="matriz" id="matriz-priorizacion"></table>
+        <div class="insight">
+          <strong>Decisión de despacho:</strong> el motor sugiere intervenir en regiones con prioridad CRÍTICA antes que FIFO. En enero 2025, Andina y Costa concentran 65.5% del churn nacional con SLA NOC en 64% — son los dos primeros casos por impacto financiero.
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Revenue mensual en riesgo por región</div>
+        <div class="panel-sub">Churn × ARPU (COP)</div>
+        <div class="chart-wrap"><canvas id="chart-revenue-riesgo"></canvas></div>
+      </div>
+    </div>
+
+    <div class="panel-grid grid-2" style="margin-top: 14px;">
+      <div class="panel">
+        <div class="panel-title">Cadena causal: deterioro de red → NPS</div>
+        <div class="panel-sub">Evolución nacional Ago 2024 — Ene 2025 (índice 100 = ago 2024)</div>
+        <div class="chart-wrap-lg"><canvas id="chart-cadena"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Conversión detractor → churn por motivo</div>
+        <div class="panel-sub">% de detractores que cancelan en 30 días</div>
+        <div class="chart-wrap-lg"><canvas id="chart-conversion"></canvas></div>
+        <div class="alert-box">
+          <strong>Hallazgo crítico:</strong> los detractores por fallas de red se duplicaron en su tasa de conversión a churn (20.1% → 40.6%). Convierten 4× más que precio.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: NOC -->
+  <div class="tab-content" id="tab-noc">
+    <div class="panel-grid grid-2">
+      <div class="panel">
+        <div class="panel-title">Mapa de calor: cumplimiento SLA NOC por región y mes</div>
+        <div class="panel-sub">Objetivo: ≥80% · Crítico: &lt;70%</div>
+        <div id="heatmap-sla" style="margin-top: 12px;"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Mapa de calor: T° resolución NOC por región</div>
+        <div class="panel-sub">SLA = 24h · Crítico: &gt;22h</div>
+        <div id="heatmap-tresol" style="margin-top: 12px;"></div>
+      </div>
+    </div>
+
+    <div class="panel-grid grid-2" style="margin-top: 14px;">
+      <div class="panel">
+        <div class="panel-title">Evolución del SLA y tiempo de resolución</div>
+        <div class="panel-sub">Nacional · línea base ago 2024</div>
+        <div class="chart-wrap"><canvas id="chart-sla-evol"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Usuarios afectados por incidentes NOC</div>
+        <div class="panel-sub">Total mensual por región</div>
+        <div class="chart-wrap"><canvas id="chart-usuarios-afect"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: CRM -->
+  <div class="tab-content" id="tab-crm">
+    <div class="panel-grid grid-2">
+      <div class="panel">
+        <div class="panel-title">Churn mensual por región</div>
+        <div class="panel-sub">Cancelaciones absolutas</div>
+        <div class="chart-wrap"><canvas id="chart-churn-region"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Tasa de churn por región</div>
+        <div class="panel-sub">% de usuarios activos que cancelan</div>
+        <div class="chart-wrap"><canvas id="chart-tasa-churn"></canvas></div>
+      </div>
+    </div>
+
+    <div class="panel-grid grid-2" style="margin-top: 14px;">
+      <div class="panel">
+        <div class="panel-title">ARPU vs Churn — análisis cruzado</div>
+        <div class="panel-sub">Cada burbuja = región-mes · tamaño = revenue en riesgo</div>
+        <div class="chart-wrap-lg"><canvas id="chart-arpu-churn"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Llamadas al Call Center por motivo</div>
+        <div class="panel-sub">Nacional · evolución mensual</div>
+        <div class="chart-wrap-lg"><canvas id="chart-cc-motivo"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: NPS -->
+  <div class="tab-content" id="tab-nps">
+    <div class="panel-grid grid-2">
+      <div class="panel">
+        <div class="panel-title">Evolución NPS por región</div>
+        <div class="panel-sub">Línea de criterio de éxito: NPS = 38</div>
+        <div class="chart-wrap-lg"><canvas id="chart-nps-evol"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Composición de detractores por motivo</div>
+        <div class="panel-sub">Nacional · enero 2025</div>
+        <div class="chart-wrap"><canvas id="chart-det-motivo"></canvas></div>
+      </div>
+    </div>
+
+    <div class="panel-grid grid-2" style="margin-top: 14px;">
+      <div class="panel">
+        <div class="panel-title">Δ NPS por región: ¿qué falta para 38?</div>
+        <div class="panel-sub">Brecha entre NPS mínimo y umbral de éxito</div>
+        <div class="chart-wrap"><canvas id="chart-delta-nps"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Correlaciones con NPS nacional</div>
+        <div class="panel-sub">Coeficiente de Pearson · Ago 2024 — Ene 2025</div>
+        <div class="chart-wrap"><canvas id="chart-correlaciones"></canvas></div>
+        <div class="insight">
+          <strong>Implicación:</strong> El abandono de la app (-0.998) y los errores de la app (-0.994) son mejores predictores del NPS que las métricas del NOC, porque capturan el efecto sobre el cliente final, no el evento técnico.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    CONECTA 360 · Dashboard analítico descriptivo + diagnóstico · Construido con Power BI / Python / SQL · Datos: 6 meses, 5 regiones, 6 sistemas integrados (NOC, CRM, NPS, SAP, App Logs, Contact Center)
+  </div>
+</div>
+
+<script>
+const DATA = [{"mes":"Ago 2024","region":"Nacional","usuarios":4195647.0,"churn":14968.0,"tasa_churn":0.34,"nps":41.78,"det_fallas":1119.0,"det_atencion":607.0,"det_precio":493.0,"cc_total":25392.0,"cc_fallas":10658.0,"noc_incidentes":null,"noc_usuarios_afect":null,"noc_t_resol":null,"noc_t_despacho":null,"noc_sla":null,"noc_fibra":null,"app_velocidad":null,"app_errores_x1000":null,"app_abandono":null,"sap_arpu":null,"sap_revenue_bruto":null,"sap_revenue_neto":null,"sap_descuentos":null,"sap_impago":null},{"mes":"Ago 2024","region":"Bogotá","usuarios":1049568.0,"churn":3106.0,"tasa_churn":0.3,"nps":43.0,"det_fallas":302.0,"det_atencion":201.0,"det_precio":168.0,"cc_total":5592.0,"cc_fallas":2463.0,"noc_incidentes":814.0,"noc_usuarios_afect":56010.0,"noc_t_resol":12.1,"noc_t_despacho":2.4,"noc_sla":93.0,"noc_fibra":342.0,"app_velocidad":27.9,"app_errores_x1000":12.6,"app_abandono":3.0,"sap_arpu":52187.0,"sap_revenue_bruto":54773.81,"sap_revenue_neto":53811.91,"sap_descuentos":106.87,"sap_impago":855.03},{"mes":"Ago 2024","region":"Andina","usuarios":1258046.0,"churn":5676.0,"tasa_churn":0.45,"nps":42.3,"det_fallas":306.0,"det_atencion":172.0,"det_precio":135.0,"cc_total":8310.0,"cc_fallas":3468.0,"noc_incidentes":2004.0,"noc_usuarios_afect":289901.0,"noc_t_resol":18.4,"noc_t_despacho":3.4,"noc_sla":82.6,"noc_fibra":1022.0,"app_velocidad":23.2,"app_errores_x1000":13.6,"app_abandono":3.4,"sap_arpu":46251.0,"sap_revenue_bruto":58206.98,"sap_revenue_neto":56911.32,"sap_descuentos":126.11,"sap_impago":1169.55},{"mes":"Ago 2024","region":"Costa","usuarios":838629.0,"churn":3164.0,"tasa_churn":0.38,"nps":40.7,"det_fallas":266.0,"det_atencion":121.0,"det_precio":97.0,"cc_total":5147.0,"cc_fallas":2084.0,"noc_incidentes":1162.0,"noc_usuarios_afect":169491.0,"noc_t_resol":18.0,"noc_t_despacho":3.3,"noc_sla":79.3,"noc_fibra":546.0,"app_velocidad":21.8,"app_errores_x1000":10.4,"app_abandono":3.0,"sap_arpu":43670.0,"sap_revenue_bruto":36630.26,"sap_revenue_neto":35855.3,"sap_descuentos":92.27,"sap_impago":682.69},{"mes":"Ago 2024","region":"Sur","usuarios":629616.0,"churn":1749.0,"tasa_churn":0.28,"nps":41.9,"det_fallas":142.0,"det_atencion":74.0,"det_precio":57.0,"cc_total":3917.0,"cc_fallas":1677.0,"noc_incidentes":839.0,"noc_usuarios_afect":84305.0,"noc_t_resol":15.0,"noc_t_despacho":2.4,"noc_sla":82.2,"noc_fibra":378.0,"app_velocidad":20.2,"app_errores_x1000":12.3,"app_abandono":2.6,"sap_arpu":38904.0,"sap_revenue_bruto":24475.56,"sap_revenue_neto":23952.28,"sap_descuentos":56.16,"sap_impago":467.12},{"mes":"Ago 2024","region":"Oriente","usuarios":419788.0,"churn":1273.0,"tasa_churn":0.3,"nps":41.0,"det_fallas":103.0,"det_atencion":39.0,"det_precio":36.0,"cc_total":2426.0,"cc_fallas":966.0,"noc_incidentes":498.0,"noc_usuarios_afect":79952.0,"noc_t_resol":14.4,"noc_t_despacho":2.6,"noc_sla":87.8,"noc_fibra":219.0,"app_velocidad":17.5,"app_errores_x1000":12.6,"app_abandono":3.1,"sap_arpu":33859.0,"sap_revenue_bruto":14204.32,"sap_revenue_neto":13909.26,"sap_descuentos":49.04,"sap_impago":246.02},{"mes":"Sep 2024","region":"Nacional","usuarios":4190385.0,"churn":17283.0,"tasa_churn":0.4,"nps":40.6,"det_fallas":1244.0,"det_atencion":648.0,"det_precio":528.0,"cc_total":25680.0,"cc_fallas":11355.0,"noc_incidentes":null,"noc_usuarios_afect":null,"noc_t_resol":null,"noc_t_despacho":null,"noc_sla":null,"noc_fibra":null,"app_velocidad":null,"app_errores_x1000":null,"app_abandono":null,"sap_arpu":null,"sap_revenue_bruto":null,"sap_revenue_neto":null,"sap_descuentos":null,"sap_impago":null},{"mes":"Sep 2024","region":"Bogotá","usuarios":1048549.0,"churn":3656.0,"tasa_churn":0.35,"nps":41.9,"det_fallas":322.0,"det_atencion":214.0,"det_precio":179.0,"cc_total":6200.0,"cc_fallas":2663.0,"noc_incidentes":858.0,"noc_usuarios_afect":59262.0,"noc_t_resol":13.4,"noc_t_despacho":1.7,"noc_sla":90.6,"noc_fibra":360.0,"app_velocidad":27.8,"app_errores_x1000":12.5,"app_abandono":2.7,"sap_arpu":51914.0,"sap_revenue_bruto":54335.06,"sap_revenue_neto":53109.04,"sap_descuentos":116.77,"sap_impago":1109.25},{"mes":"Sep 2024","region":"Andina","usuarios":1255609.0,"churn":5648.0,"tasa_churn":0.45,"nps":39.8,"det_fallas":391.0,"det_atencion":201.0,"det_precio":159.0,"cc_total":8355.0,"cc_fallas":3800.0,"noc_incidentes":2517.0,"noc_usuarios_afect":357000.0,"noc_t_resol":16.6,"noc_t_despacho":4.3,"noc_sla":79.5,"noc_fibra":1320.0,"app_velocidad":21.8,"app_errores_x1000":18.6,"app_abandono":4.9,"sap_arpu":44958.0,"sap_revenue_bruto":56463.88,"sap_revenue_neto":54911.95,"sap_descuentos":205.57,"sap_impago":1346.36},{"mes":"Sep 2024","region":"Costa","usuarios":837248.0,"churn":4646.0,"tasa_churn":0.55,"nps":38.4,"det_fallas":274.0,"det_atencion":115.0,"det_precio":93.0,"cc_total":5205.0,"cc_fallas":2358.0,"noc_incidentes":1267.0,"noc_usuarios_afect":199877.0,"noc_t_resol":18.5,"noc_t_despacho":5.1,"noc_sla":73.6,"noc_fibra":606.0,"app_velocidad":22.3,"app_errores_x1000":17.9,"app_abandono":5.0,"sap_arpu":43193.0,"sap_revenue_bruto":36186.1,"sap_revenue_neto":35186.09,"sap_descuentos":119.05,"sap_impago":880.96},{"mes":"Sep 2024","region":"Sur","usuarios":629395.0,"churn":1878.0,"tasa_churn":0.3,"nps":40.8,"det_fallas":146.0,"det_atencion":76.0,"det_precio":58.0,"cc_total":3633.0,"cc_fallas":1547.0,"noc_incidentes":950.0,"noc_usuarios_afect":127635.0,"noc_t_resol":17.6,"noc_t_despacho":3.6,"noc_sla":84.4,"noc_fibra":432.0,"app_velocidad":19.8,"app_errores_x1000":12.9,"app_abandono":2.6,"sap_arpu":38877.0,"sap_revenue_bruto":24431.51,"sap_revenue_neto":23985.47,"sap_descuentos":56.76,"sap_impago":389.28},{"mes":"Sep 2024","region":"Oriente","usuarios":419584.0,"churn":1455.0,"tasa_churn":0.35,"nps":42.1,"det_fallas":111.0,"det_atencion":42.0,"det_precio":39.0,"cc_total":2287.0,"cc_fallas":987.0,"noc_incidentes":508.0,"noc_usuarios_afect":82581.0,"noc_t_resol":16.1,"noc_t_despacho":3.7,"noc_sla":81.9,"noc_fibra":225.0,"app_velocidad":15.3,"app_errores_x1000":10.9,"app_abandono":3.0,"sap_arpu":33811.0,"sap_revenue_bruto":14162.99,"sap_revenue_neto":13855.83,"sap_descuentos":45.87,"sap_impago":261.29},{"mes":"Oct 2024","region":"Nacional","usuarios":4183525.0,"churn":21385.0,"tasa_churn":0.48,"nps":39.28,"det_fallas":1305.0,"det_atencion":641.0,"det_precio":518.0,"cc_total":27775.0,"cc_fallas":12504.0,"noc_incidentes":null,"noc_usuarios_afect":null,"noc_t_resol":null,"noc_t_despacho":null,"noc_sla":null,"noc_fibra":null,"app_velocidad":null,"app_errores_x1000":null,"app_abandono":null,"sap_arpu":null,"sap_revenue_bruto":null,"sap_revenue_neto":null,"sap_descuentos":null,"sap_impago":null},{"mes":"Oct 2024","region":"Bogotá","usuarios":1047669.0,"churn":3871.0,"tasa_churn":0.37,"nps":42.8,"det_fallas":272.0,"det_atencion":182.0,"det_precio":151.0,"cc_total":6330.0,"cc_fallas":2642.0,"noc_incidentes":791.0,"noc_usuarios_afect":63628.0,"noc_t_resol":12.7,"noc_t_despacho":1.6,"noc_sla":93.2,"noc_fibra":332.0,"app_velocidad":27.6,"app_errores_x1000":12.2,"app_abandono":3.1,"sap_arpu":51655.0,"sap_revenue_bruto":53939.34,"sap_revenue_neto":52930.67,"sap_descuentos":118.29,"sap_impago":890.38},{"mes":"Oct 2024","region":"Andina","usuarios":1252451.0,"churn":7970.0,"tasa_churn":0.63,"nps":36.8,"det_fallas":415.0,"det_atencion":198.0,"det_precio":155.0,"cc_total":9472.0,"cc_fallas":4541.0,"noc_incidentes":2253.0,"noc_usuarios_afect":373231.0,"noc_t_resol":20.9,"noc_t_despacho":5.1,"noc_sla":79.1,"noc_fibra":1214.0,"app_velocidad":21.2,"app_errores_x1000":26.0,"app_abandono":6.8,"sap_arpu":44652.0,"sap_revenue_bruto":55956.68,"sap_revenue_neto":53747.58,"sap_descuentos":242.72,"sap_impago":1966.38},{"mes":"Oct 2024","region":"Costa","usuarios":834997.0,"churn":5845.0,"tasa_churn":0.7,"nps":35.2,"det_fallas":338.0,"det_atencion":132.0,"det_precio":106.0,"cc_total":5392.0,"cc_fallas":2628.0,"noc_incidentes":1485.0,"noc_usuarios_afect":227828.0,"noc_t_resol":22.0,"noc_t_despacho":6.2,"noc_sla":71.3,"noc_fibra":722.0,"app_velocidad":19.8,"app_errores_x1000":31.8,"app_abandono":6.5,"sap_arpu":42646.0,"sap_revenue_bruto":35657.34,"sap_revenue_neto":34211.72,"sap_descuentos":192.77,"sap_impago":1252.85},{"mes":"Oct 2024","region":"Sur","usuarios":628955.0,"churn":2336.0,"tasa_churn":0.37,"nps":40.9,"det_fallas":161.0,"det_atencion":84.0,"det_precio":65.0,"cc_total":3775.0,"cc_fallas":1565.0,"noc_incidentes":854.0,"noc_usuarios_afect":102449.0,"noc_t_resol":20.2,"noc_t_despacho":3.7,"noc_sla":75.3,"noc_fibra":392.0,"app_velocidad":20.2,"app_errores_x1000":12.2,"app_abandono":2.4,"sap_arpu":38770.0,"sap_revenue_bruto":24318.4,"sap_revenue_neto":23788.52,"sap_descuentos":66.46,"sap_impago":463.42},{"mes":"Oct 2024","region":"Oriente","usuarios":419453.0,"churn":1363.0,"tasa_churn":0.32,"nps":40.7,"det_fallas":119.0,"det_atencion":45.0,"det_precio":41.0,"cc_total":2806.0,"cc_fallas":1128.0,"noc_incidentes":571.0,"noc_usuarios_afect":104363.0,"noc_t_resol":19.2,"noc_t_despacho":3.9,"noc_sla":81.3,"noc_fibra":255.0,"app_velocidad":16.5,"app_errores_x1000":10.1,"app_abandono":3.0,"sap_arpu":34442.0,"sap_revenue_bruto":14402.44,"sap_revenue_neto":14130.79,"sap_descuentos":47.78,"sap_impago":223.87},{"mes":"Nov 2024","region":"Nacional","usuarios":4175004.0,"churn":22894.0,"tasa_churn":0.51,"nps":38.46,"det_fallas":1411.0,"det_atencion":661.0,"det_precio":532.0,"cc_total":29010.0,"cc_fallas":13693.0,"noc_incidentes":null,"noc_usuarios_afect":null,"noc_t_resol":null,"noc_t_despacho":null,"noc_sla":null,"noc_fibra":null,"app_velocidad":null,"app_errores_x1000":null,"app_abandono":null,"sap_arpu":null,"sap_revenue_bruto":null,"sap_revenue_neto":null,"sap_descuentos":null,"sap_impago":null},{"mes":"Nov 2024","region":"Bogotá","usuarios":1047275.0,"churn":3826.0,"tasa_churn":0.37,"nps":43.9,"det_fallas":274.0,"det_atencion":182.0,"det_precio":152.0,"cc_total":6062.0,"cc_fallas":2579.0,"noc_incidentes":885.0,"noc_usuarios_afect":67351.0,"noc_t_resol":13.4,"noc_t_despacho":2.6,"noc_sla":93.1,"noc_fibra":372.0,"app_velocidad":27.4,"app_errores_x1000":12.7,"app_abandono":2.9,"sap_arpu":51302.0,"sap_revenue_bruto":53470.28,"sap_revenue_neto":52274.47,"sap_descuentos":120.67,"sap_impago":1075.14},{"mes":"Nov 2024","region":"Andina","usuarios":1247812.0,"churn":9306.0,"tasa_churn":0.74,"nps":33.3,"det_fallas":519.0,"det_atencion":230.0,"det_precio":180.0,"cc_total":9157.0,"cc_fallas":4855.0,"noc_incidentes":2709.0,"noc_usuarios_afect":407375.0,"noc_t_resol":20.5,"noc_t_despacho":5.5,"noc_sla":71.8,"noc_fibra":1499.0,"app_velocidad":20.8,"app_errores_x1000":35.6,"app_abandono":8.1,"sap_arpu":44613.0,"sap_revenue_bruto":55660.34,"sap_revenue_neto":53272.97,"sap_descuentos":339.37,"sap_impago":2048.0},{"mes":"Nov 2024","region":"Costa","usuarios":832412.0,"churn":6026.0,"tasa_churn":0.72,"nps":32.7,"det_fallas":381.0,"det_atencion":140.0,"det_precio":111.0,"cc_total":7042.0,"cc_fallas":3427.0,"noc_incidentes":1393.0,"noc_usuarios_afect":252652.0,"noc_t_resol":23.6,"noc_t_despacho":7.3,"noc_sla":68.1,"noc_fibra":688.0,"app_velocidad":18.4,"app_errores_x1000":33.9,"app_abandono":8.1,"sap_arpu":41512.0,"sap_revenue_bruto":34556.54,"sap_revenue_neto":33177.81,"sap_descuentos":256.08,"sap_impago":1122.65},{"mes":"Nov 2024","region":"Sur","usuarios":628418.0,"churn":2259.0,"tasa_churn":0.36,"nps":40.4,"det_fallas":138.0,"det_atencion":72.0,"det_precio":55.0,"cc_total":4023.0,"cc_fallas":1715.0,"noc_incidentes":905.0,"noc_usuarios_afect":118716.0,"noc_t_resol":18.2,"noc_t_despacho":4.5,"noc_sla":77.7,"noc_fibra":420.0,"app_velocidad":20.7,"app_errores_x1000":12.5,"app_abandono":2.6,"sap_arpu":38752.0,"sap_revenue_bruto":24238.87,"sap_revenue_neto":23708.62,"sap_descuentos":69.8,"sap_impago":460.45},{"mes":"Nov 2024","region":"Oriente","usuarios":419087.0,"churn":1477.0,"tasa_churn":0.35,"nps":42.0,"det_fallas":99.0,"det_atencion":37.0,"det_precio":34.0,"cc_total":2726.0,"cc_fallas":1117.0,"noc_incidentes":618.0,"noc_usuarios_afect":130085.0,"noc_t_resol":17.9,"noc_t_despacho":4.4,"noc_sla":80.4,"noc_fibra":278.0,"app_velocidad":15.6,"app_errores_x1000":11.7,"app_abandono":2.8,"sap_arpu":34257.0,"sap_revenue_bruto":14283.73,"sap_revenue_neto":13953.99,"sap_descuentos":47.77,"sap_impago":281.97},{"mes":"Dic 2024","region":"Nacional","usuarios":4167181.0,"churn":25741.0,"tasa_churn":0.57,"nps":36.8,"det_fallas":1554.0,"det_atencion":702.0,"det_precio":568.0,"cc_total":30750.0,"cc_fallas":14651.0,"noc_incidentes":null,"noc_usuarios_afect":null,"noc_t_resol":null,"noc_t_despacho":null,"noc_sla":null,"noc_fibra":null,"app_velocidad":null,"app_errores_x1000":null,"app_abandono":null,"sap_arpu":null,"sap_revenue_bruto":null,"sap_revenue_neto":null,"sap_descuentos":null,"sap_impago":null},{"mes":"Dic 2024","region":"Bogotá","usuarios":1046230.0,"churn":4215.0,"tasa_churn":0.4,"nps":43.6,"det_fallas":301.0,"det_atencion":200.0,"det_precio":167.0,"cc_total":6766.0,"cc_fallas":2772.0,"noc_incidentes":891.0,"noc_usuarios_afect":73178.0,"noc_t_resol":15.3,"noc_t_despacho":1.8,"noc_sla":94.2,"noc_fibra":374.0,"app_velocidad":27.7,"app_errores_x1000":10.5,"app_abandono":3.6,"sap_arpu":50980.0,"sap_revenue_bruto":52954.61,"sap_revenue_neto":52013.91,"sap_descuentos":117.58,"sap_impago":823.12},{"mes":"Dic 2024","region":"Andina","usuarios":1244482.0,"churn":10529.0,"tasa_churn":0.84,"nps":29.1,"det_fallas":578.0,"det_atencion":240.0,"det_precio":188.0,"cc_total":9457.0,"cc_fallas":5173.0,"noc_incidentes":2640.0,"noc_usuarios_afect":461699.0,"noc_t_resol":22.0,"noc_t_despacho":6.3,"noc_sla":68.9,"noc_fibra":1498.0,"app_velocidad":16.3,"app_errores_x1000":42.9,"app_abandono":9.8,"sap_arpu":43715.0,"sap_revenue_bruto":54170.54,"sap_revenue_neto":51134.71,"sap_descuentos":453.98,"sap_impago":2581.85},{"mes":"Dic 2024","region":"Costa","usuarios":829898.0,"churn":7020.0,"tasa_churn":0.84,"nps":27.6,"det_fallas":418.0,"det_atencion":144.0,"det_precio":115.0,"cc_total":7507.0,"cc_fallas":3821.0,"noc_incidentes":1338.0,"noc_usuarios_afect":241011.0,"noc_t_resol":21.0,"noc_t_despacho":8.0,"noc_sla":65.5,"noc_fibra":672.0,"app_velocidad":16.1,"app_errores_x1000":41.9,"app_abandono":10.6,"sap_arpu":40428.0,"sap_revenue_bruto":33431.93,"sap_revenue_neto":31479.46,"sap_descuentos":346.91,"sap_impago":1605.56},{"mes":"Dic 2024","region":"Sur","usuarios":627807.0,"churn":2221.0,"tasa_churn":0.35,"nps":41.9,"det_fallas":155.0,"det_atencion":80.0,"det_precio":63.0,"cc_total":4392.0,"cc_fallas":1838.0,"noc_incidentes":1061.0,"noc_usuarios_afect":160525.0,"noc_t_resol":19.4,"noc_t_despacho":5.5,"noc_sla":77.9,"noc_fibra":498.0,"app_velocidad":18.3,"app_errores_x1000":12.5,"app_abandono":3.0,"sap_arpu":38938.0,"sap_revenue_bruto":24266.24,"sap_revenue_neto":23797.2,"sap_descuentos":61.94,"sap_impago":407.1},{"mes":"Dic 2024","region":"Oriente","usuarios":418764.0,"churn":1756.0,"tasa_churn":0.42,"nps":41.8,"det_fallas":102.0,"det_atencion":38.0,"det_precio":35.0,"cc_total":2628.0,"cc_fallas":1047.0,"noc_incidentes":559.0,"noc_usuarios_afect":110715.0,"noc_t_resol":19.9,"noc_t_despacho":4.8,"noc_sla":69.8,"noc_fibra":253.0,"app_velocidad":15.6,"app_errores_x1000":11.4,"app_abandono":3.3,"sap_arpu":33594.0,"sap_revenue_bruto":13950.85,"sap_revenue_neto":13625.39,"sap_descuentos":48.01,"sap_impago":277.45},{"mes":"Ene 2025","region":"Nacional","usuarios":4157278.0,"churn":27838.0,"tasa_churn":0.61,"nps":35.48,"det_fallas":1798.0,"det_atencion":779.0,"det_precio":630.0,"cc_total":32842.0,"cc_fallas":16114.0,"noc_incidentes":null,"noc_usuarios_afect":null,"noc_t_resol":null,"noc_t_despacho":null,"noc_sla":null,"noc_fibra":null,"app_velocidad":null,"app_errores_x1000":null,"app_abandono":null,"sap_arpu":null,"sap_revenue_bruto":null,"sap_revenue_neto":null,"sap_descuentos":null,"sap_impago":null},{"mes":"Ene 2025","region":"Bogotá","usuarios":1045212.0,"churn":4558.0,"tasa_churn":0.44,"nps":41.1,"det_fallas":334.0,"det_atencion":223.0,"det_precio":185.0,"cc_total":7816.0,"cc_fallas":3127.0,"noc_incidentes":739.0,"noc_usuarios_afect":52481.0,"noc_t_resol":16.5,"noc_t_despacho":2.2,"noc_sla":93.4,"noc_fibra":310.0,"app_velocidad":27.3,"app_errores_x1000":12.4,"app_abandono":3.1,"sap_arpu":51234.0,"sap_revenue_bruto":53055.52,"sap_revenue_neto":52102.72,"sap_descuentos":104.06,"sap_impago":848.74},{"mes":"Ene 2025","region":"Andina","usuarios":1238924.0,"churn":11967.0,"tasa_churn":0.96,"nps":26.3,"det_fallas":712.0,"det_atencion":277.0,"det_precio":218.0,"cc_total":10757.0,"cc_fallas":6217.0,"noc_incidentes":2700.0,"noc_usuarios_afect":481242.0,"noc_t_resol":24.6,"noc_t_despacho":7.5,"noc_sla":64.0,"noc_fibra":1571.0,"app_velocidad":16.3,"app_errores_x1000":50.7,"app_abandono":11.9,"sap_arpu":42276.0,"sap_revenue_bruto":52000.2,"sap_revenue_neto":48702.76,"sap_descuentos":605.3,"sap_impago":2692.14},{"mes":"Ene 2025","region":"Costa","usuarios":827331.0,"churn":7379.0,"tasa_churn":0.89,"nps":26.4,"det_fallas":484.0,"det_atencion":157.0,"det_precio":126.0,"cc_total":7193.0,"cc_fallas":3841.0,"noc_incidentes":1477.0,"noc_usuarios_afect":319369.0,"noc_t_resol":28.9,"noc_t_despacho":8.6,"noc_sla":64.2,"noc_fibra":753.0,"app_velocidad":14.1,"app_errores_x1000":51.9,"app_abandono":11.7,"sap_arpu":40598.0,"sap_revenue_bruto":33342.45,"sap_revenue_neto":31249.76,"sap_descuentos":339.79,"sap_impago":1752.9},{"mes":"Ene 2025","region":"Sur","usuarios":627436.0,"churn":2356.0,"tasa_churn":0.38,"nps":43.5,"det_fallas":143.0,"det_atencion":74.0,"det_precio":58.0,"cc_total":4259.0,"cc_fallas":1794.0,"noc_incidentes":1024.0,"noc_usuarios_afect":188089.0,"noc_t_resol":20.4,"noc_t_despacho":5.6,"noc_sla":69.2,"noc_fibra":485.0,"app_velocidad":19.7,"app_errores_x1000":11.6,"app_abandono":3.3,"sap_arpu":38880.0,"sap_revenue_bruto":24129.78,"sap_revenue_neto":23618.7,"sap_descuentos":69.99,"sap_impago":441.09},{"mes":"Ene 2025","region":"Oriente","usuarios":418375.0,"churn":1578.0,"tasa_churn":0.38,"nps":40.1,"det_fallas":125.0,"det_atencion":48.0,"det_precio":43.0,"cc_total":2817.0,"cc_fallas":1135.0,"noc_incidentes":529.0,"noc_usuarios_afect":118919.0,"noc_t_resol":20.0,"noc_t_despacho":5.3,"noc_sla":67.3,"noc_fibra":241.0,"app_velocidad":16.0,"app_errores_x1000":9.8,"app_abandono":3.5,"sap_arpu":33525.0,"sap_revenue_bruto":13862.08,"sap_revenue_neto":13572.85,"sap_descuentos":46.94,"sap_impago":242.29}];
+
+const MESES = ['Ago 2024', 'Sep 2024', 'Oct 2024', 'Nov 2024', 'Dic 2024', 'Ene 2025'];
+const REGIONES = ['Bogotá', 'Andina', 'Costa', 'Sur', 'Oriente'];
+
+const PALETTE = {
+  teal: '#1D9E75', tealLight: '#E1F5EE', tealDark: '#0F6E56',
+  coral: '#D85A30', coralLight: '#FAECE7', coralDark: '#993C1D',
+  purple: '#7F77DD', purpleLight: '#EEEDFE', purpleDark: '#534AB7',
+  blue: '#378ADD', blueLight: '#E6F1FB', blueDark: '#185FA5',
+  amber: '#BA7517', amberLight: '#FAEEDA', amberDark: '#854F0B',
+  red: '#E24B4A', redLight: '#FCEBEB', redDark: '#A32D2D',
+  green: '#97C459', greenLight: '#EAF3DE', greenDark: '#3B6D11',
+  gray: '#888780', grayLight: '#F1EFE8', grayDark: '#444441',
+};
+
+const REGION_COLOR = {
+  'Bogotá': PALETTE.blue,
+  'Andina': PALETTE.red,
+  'Costa': PALETTE.coral,
+  'Sur': PALETTE.teal,
+  'Oriente': PALETTE.amber,
+  'Nacional': PALETTE.purple,
+};
+
+function fmt(n, dec = 0) {
+  if (n === null || n === undefined) return '—';
+  return new Intl.NumberFormat('es-CO', { maximumFractionDigits: dec, minimumFractionDigits: dec }).format(n);
+}
+function fmtMoneyM(cop) {
+  if (cop === null || cop === undefined) return '—';
+  return '$' + fmt(cop / 1e6, 0) + 'M';
+}
+function getRow(mes, region) {
+  return DATA.find(r => r.mes === mes && r.region === region);
+}
+
+// =========== KPIs ===========
+function renderKPIs() {
+  const mes = document.getElementById('filter-mes').value;
+  const region = document.getElementById('filter-region').value;
+  const row = getRow(mes, region);
+  const rowBase = getRow('Ago 2024', region);
+  if (!row) return;
+
+  const kpis = [
+    {
+      label: 'NPS',
+      value: row.nps?.toFixed(1),
+      unit: 'puntos',
+      delta: rowBase ? (row.nps - rowBase.nps).toFixed(1) : null,
+      deltaBad: rowBase && row.nps < rowBase.nps,
+      accent: PALETTE.purpleDark,
+      target: '≥ 38'
+    },
+    {
+      label: 'Tasa de Churn',
+      value: row.tasa_churn?.toFixed(2),
+      unit: '%',
+      delta: rowBase ? (row.tasa_churn - rowBase.tasa_churn).toFixed(2) : null,
+      deltaBad: rowBase && row.tasa_churn > rowBase.tasa_churn,
+      accent: PALETTE.coralDark,
+      target: '≤ 0.40'
+    },
+    {
+      label: 'SLA NOC',
+      value: row.noc_sla?.toFixed(1),
+      unit: '%',
+      delta: rowBase ? (row.noc_sla - rowBase.noc_sla).toFixed(1) : null,
+      deltaBad: rowBase && row.noc_sla < rowBase.noc_sla,
+      accent: PALETTE.blueDark,
+      target: '≥ 80'
+    },
+    {
+      label: 'T° Resolución NOC',
+      value: row.noc_t_resol?.toFixed(1),
+      unit: 'h',
+      delta: rowBase ? (row.noc_t_resol - rowBase.noc_t_resol).toFixed(1) : null,
+      deltaBad: rowBase && row.noc_t_resol > rowBase.noc_t_resol,
+      accent: PALETTE.amberDark,
+      target: '≤ 16h'
+    },
+    {
+      label: 'Revenue Neto',
+      value: fmtMoneyM(row.sap_revenue_neto * 1e6),
+      unit: 'COP',
+      delta: rowBase ? fmtMoneyM((row.sap_revenue_neto - rowBase.sap_revenue_neto) * 1e6) : null,
+      deltaBad: rowBase && row.sap_revenue_neto < rowBase.sap_revenue_neto,
+      accent: PALETTE.tealDark,
+      target: ''
+    },
+  ];
+
+  document.getElementById('kpis').innerHTML = kpis.map(k => `
+    <div class="kpi" style="--accent: ${k.accent}">
+      <div class="kpi-label">${k.label} ${k.target ? `<span style="color:#A8A6A0;font-weight:400;text-transform:none">· objetivo ${k.target}</span>` : ''}</div>
+      <div class="kpi-value">${k.value || '—'} <span class="kpi-unit">${k.unit}</span></div>
+      ${k.delta ? `<div class="kpi-delta ${k.deltaBad ? 'delta-bad' : 'delta-good'}">
+        <span class="delta-arrow">${k.deltaBad ? '▼' : '▲'}</span>
+        ${k.delta} vs ago 2024
+      </div>` : ''}
+    </div>
+  `).join('');
+}
+
+// =========== MATRIZ DE PRIORIZACIÓN ===========
+function renderMatriz() {
+  const mes = document.getElementById('filter-mes').value;
+  const rows = REGIONES.map(reg => {
+    const r = getRow(mes, reg);
+    if (!r) return null;
+    const churn = r.churn || 0;
+    const arpu = r.sap_arpu || 0;
+    const tResol = r.noc_t_resol || 0;
+    const sla = r.noc_sla || 0;
+    const nps = r.nps || 0;
+    const revenueRiesgo = (churn * arpu);
+
+    // Priorización lógica: combinar revenue en riesgo (peso 50%), SLA bajo (peso 25%), NPS bajo (peso 25%)
+    let score = 0;
+    if (revenueRiesgo > 400e6) score += 50;
+    else if (revenueRiesgo > 200e6) score += 30;
+    else if (revenueRiesgo > 100e6) score += 15;
+
+    if (sla < 70) score += 25;
+    else if (sla < 80) score += 12;
+
+    if (nps < 30) score += 25;
+    else if (nps < 38) score += 12;
+
+    let priority, badge;
+    if (score >= 70) { priority = 'CRÍTICA'; badge = 'badge-critical'; }
+    else if (score >= 45) { priority = 'ALTA'; badge = 'badge-high'; }
+    else if (score >= 20) { priority = 'MEDIA'; badge = 'badge-medium'; }
+    else { priority = 'BAJA'; badge = 'badge-low'; }
+
+    return { reg, churn, arpu, tResol, sla, nps, revenueRiesgo, priority, badge, score };
+  }).filter(Boolean);
+
+  rows.sort((a, b) => b.score - a.score);
+
+  document.getElementById('matriz-priorizacion').innerHTML = `
+    <thead>
+      <tr>
+        <th>Región</th>
+        <th>Prioridad</th>
+        <th>NPS</th>
+        <th>SLA NOC</th>
+        <th>T° Resol.</th>
+        <th>Churn mes</th>
+        <th>ARPU</th>
+        <th>Revenue en riesgo/mes</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows.map(r => `
+        <tr>
+          <td><strong>${r.reg}</strong></td>
+          <td><span class="badge ${r.badge}">${r.priority}</span></td>
+          <td>${r.nps.toFixed(1)}</td>
+          <td>${r.sla.toFixed(1)}%</td>
+          <td>${r.tResol.toFixed(1)}h</td>
+          <td>${fmt(r.churn)}</td>
+          <td>$${fmt(r.arpu)}</td>
+          <td><strong>${fmtMoneyM(r.revenueRiesgo)}</strong></td>
+        </tr>
+      `).join('')}
+    </tbody>
+  `;
+}
+
+// =========== HEATMAPS ===========
+function classFor(val, thresholds) {
+  // thresholds: { red, orange, yellow } — values BELOW each are that color (for SLA-style: higher = better)
+  // direction: 'high_good' or 'high_bad'
+  if (thresholds.direction === 'high_good') {
+    if (val >= thresholds.green) return 'h-green';
+    if (val >= thresholds.yellow) return 'h-yellow';
+    if (val >= thresholds.orange) return 'h-orange';
+    return 'h-red';
+  } else {
+    if (val <= thresholds.green) return 'h-green';
+    if (val <= thresholds.yellow) return 'h-yellow';
+    if (val <= thresholds.orange) return 'h-orange';
+    return 'h-red';
+  }
+}
+
+function renderHeatmaps() {
+  // SLA heatmap (higher is better)
+  const slaHTML = ['<div class="heatmap">'];
+  slaHTML.push('<div class="heat-h"></div>');
+  MESES.forEach(m => slaHTML.push(`<div class="heat-h">${m.split(' ')[0]}</div>`));
+  REGIONES.forEach(reg => {
+    slaHTML.push(`<div class="heat-rl">${reg}</div>`);
+    MESES.forEach(mes => {
+      const r = getRow(mes, reg);
+      const v = r?.noc_sla;
+      if (v === null || v === undefined) {
+        slaHTML.push(`<div class="heat-cell">—</div>`);
+      } else {
+        const c = classFor(v, { direction: 'high_good', green: 80, yellow: 70, orange: 65 });
+        slaHTML.push(`<div class="heat-cell ${c}">${v.toFixed(0)}%</div>`);
+      }
+    });
+  });
+  slaHTML.push('</div>');
+  document.getElementById('heatmap-sla').innerHTML = slaHTML.join('');
+
+  // T° resolución heatmap (lower is better)
+  const trHTML = ['<div class="heatmap">'];
+  trHTML.push('<div class="heat-h"></div>');
+  MESES.forEach(m => trHTML.push(`<div class="heat-h">${m.split(' ')[0]}</div>`));
+  REGIONES.forEach(reg => {
+    trHTML.push(`<div class="heat-rl">${reg}</div>`);
+    MESES.forEach(mes => {
+      const r = getRow(mes, reg);
+      const v = r?.noc_t_resol;
+      if (v === null || v === undefined) {
+        trHTML.push(`<div class="heat-cell">—</div>`);
+      } else {
+        const c = classFor(v, { direction: 'high_bad', green: 16, yellow: 20, orange: 24 });
+        trHTML.push(`<div class="heat-cell ${c}">${v.toFixed(1)}h</div>`);
+      }
+    });
+  });
+  trHTML.push('</div>');
+  document.getElementById('heatmap-tresol').innerHTML = trHTML.join('');
+}
+
+// =========== CHARTS ===========
+const charts = {};
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+const commonOpts = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { labels: { font: { size: 10, family: 'inherit' }, boxWidth: 12, color: '#5F5E5A' } },
+    tooltip: { titleFont: { size: 11 }, bodyFont: { size: 11 } }
+  },
+  scales: {
+    x: { ticks: { font: { size: 10 }, color: '#5F5E5A' }, grid: { color: '#F1EFE8' } },
+    y: { ticks: { font: { size: 10 }, color: '#5F5E5A' }, grid: { color: '#F1EFE8' } }
+  }
+};
+
+function renderRevenueRiesgo() {
+  destroyChart('revenue-riesgo');
+  const mes = document.getElementById('filter-mes').value;
+  const data = REGIONES.map(reg => {
+    const r = getRow(mes, reg);
+    return r ? (r.churn * r.sap_arpu) / 1e6 : 0;
+  });
+  const ctx = document.getElementById('chart-revenue-riesgo').getContext('2d');
+  charts['revenue-riesgo'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: REGIONES,
+      datasets: [{
+        label: 'Revenue en riesgo (M COP)',
+        data,
+        backgroundColor: REGIONES.map(r => REGION_COLOR[r]),
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      ...commonOpts,
+      indexAxis: 'y',
+      plugins: { ...commonOpts.plugins, legend: { display: false } }
+    }
+  });
+}
+
+function renderCadena() {
+  destroyChart('cadena');
+  const labels = MESES;
+  const base = getRow('Ago 2024', 'Nacional');
+  function idx(metric) {
+    return labels.map(m => {
+      const r = getRow(m, 'Nacional');
+      if (!r || !base) return null;
+      return r[metric] && base[metric] ? (r[metric] / base[metric] * 100) : null;
+    });
+  }
+  const ctx = document.getElementById('chart-cadena').getContext('2d');
+  charts['cadena'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Usuarios afectados NOC', data: idx('noc_usuarios_afect'), borderColor: PALETTE.blueDark, backgroundColor: 'transparent', tension: 0.3, borderWidth: 2 },
+        { label: 'Errores App x1000', data: idx('app_errores_x1000'), borderColor: PALETTE.amberDark, backgroundColor: 'transparent', tension: 0.3, borderWidth: 2 },
+        { label: 'Llamadas CC por fallas', data: idx('cc_fallas'), borderColor: PALETTE.coralDark, backgroundColor: 'transparent', tension: 0.3, borderWidth: 2 },
+        { label: 'Detractores por fallas', data: idx('det_fallas'), borderColor: PALETTE.redDark, backgroundColor: 'transparent', tension: 0.3, borderWidth: 2 },
+        { label: 'Churn mensual', data: idx('churn'), borderColor: PALETTE.purpleDark, backgroundColor: 'transparent', tension: 0.3, borderWidth: 3, borderDash: [5,3] },
+        { label: 'NPS (invertido)', data: labels.map(m => { const r=getRow(m,'Nacional'); return r && base ? (base.nps / r.nps * 100) : null; }), borderColor: PALETTE.tealDark, backgroundColor: 'transparent', tension: 0.3, borderWidth: 2, borderDash: [2,2] },
+      ]
+    },
+    options: {
+      ...commonOpts,
+      scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, title: { display: true, text: 'Índice (ago 2024 = 100)', font: { size: 10 }, color: '#5F5E5A' } } }
+    }
+  });
+}
+
+function renderConversion() {
+  destroyChart('conversion');
+  // Tasas de conversión detractor→churn por motivo, calculadas previamente
+  const data = {
+    'Ago 2024': { fallas: 20.1, atencion: 9.6, precio: 6.9 },
+    'Sep 2024': { fallas: 23.4, atencion: 10.5, precio: 7.5 },
+    'Oct 2024': { fallas: 27.8, atencion: 11.9, precio: 8.2 },
+    'Nov 2024': { fallas: 32.5, atencion: 12.8, precio: 9.1 },
+    'Dic 2024': { fallas: 36.9, atencion: 13.8, precio: 9.8 },
+    'Ene 2025': { fallas: 40.6, atencion: 14.6, precio: 10.5 },
+  };
+  const ctx = document.getElementById('chart-conversion').getContext('2d');
+  charts['conversion'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: MESES,
+      datasets: [
+        { label: 'Fallas de red', data: MESES.map(m => data[m].fallas), borderColor: PALETTE.redDark, backgroundColor: PALETTE.redLight, fill: true, tension: 0.3, borderWidth: 2 },
+        { label: 'Atención', data: MESES.map(m => data[m].atencion), borderColor: PALETTE.amberDark, backgroundColor: 'transparent', tension: 0.3, borderWidth: 2 },
+        { label: 'Precio', data: MESES.map(m => data[m].precio), borderColor: PALETTE.tealDark, backgroundColor: 'transparent', tension: 0.3, borderWidth: 2 },
+      ]
+    },
+    options: {
+      ...commonOpts,
+      scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, title: { display: true, text: '% conversión a churn', font: { size: 10 }, color: '#5F5E5A' } } }
+    }
+  });
+}
+
+function renderSLAEvol() {
+  destroyChart('sla-evol');
+  const ctx = document.getElementById('chart-sla-evol').getContext('2d');
+  charts['sla-evol'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: MESES,
+      datasets: [
+        { label: 'SLA NOC (%)', data: MESES.map(m => getRow(m,'Nacional')?.noc_sla), borderColor: PALETTE.blueDark, backgroundColor: PALETTE.blueLight, fill: true, tension: 0.3, yAxisID: 'y', borderWidth: 2 },
+        { label: 'T° resolución (h)', data: MESES.map(m => getRow(m,'Nacional')?.noc_t_resol), borderColor: PALETTE.amberDark, backgroundColor: 'transparent', tension: 0.3, yAxisID: 'y1', borderWidth: 2 },
+      ]
+    },
+    options: {
+      ...commonOpts,
+      scales: {
+        x: commonOpts.scales.x,
+        y: { ...commonOpts.scales.y, position: 'left', title: { display: true, text: 'SLA %', font: { size: 10 }, color: PALETTE.blueDark } },
+        y1: { ...commonOpts.scales.y, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'T° resol. (h)', font: { size: 10 }, color: PALETTE.amberDark } },
+      }
+    }
+  });
+}
+
+function renderUsuariosAfect() {
+  destroyChart('usuarios-afect');
+  const ctx = document.getElementById('chart-usuarios-afect').getContext('2d');
+  charts['usuarios-afect'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: MESES,
+      datasets: REGIONES.map(reg => ({
+        label: reg,
+        data: MESES.map(m => getRow(m, reg)?.noc_usuarios_afect),
+        backgroundColor: REGION_COLOR[reg],
+        borderRadius: 3,
+      }))
+    },
+    options: { ...commonOpts, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, stacked: true }, x: { ...commonOpts.scales.x, stacked: true } } }
+  });
+}
+
+function renderChurnRegion() {
+  destroyChart('churn-region');
+  const ctx = document.getElementById('chart-churn-region').getContext('2d');
+  charts['churn-region'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: MESES,
+      datasets: REGIONES.map(reg => ({
+        label: reg,
+        data: MESES.map(m => getRow(m, reg)?.churn),
+        borderColor: REGION_COLOR[reg],
+        backgroundColor: 'transparent',
+        tension: 0.3,
+        borderWidth: reg === 'Andina' || reg === 'Costa' ? 3 : 1.5,
+      }))
+    },
+    options: commonOpts
+  });
+}
+
+function renderTasaChurn() {
+  destroyChart('tasa-churn');
+  const ctx = document.getElementById('chart-tasa-churn').getContext('2d');
+  charts['tasa-churn'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: MESES,
+      datasets: REGIONES.map(reg => ({
+        label: reg,
+        data: MESES.map(m => getRow(m, reg)?.tasa_churn),
+        borderColor: REGION_COLOR[reg],
+        backgroundColor: 'transparent',
+        tension: 0.3,
+        borderWidth: reg === 'Andina' || reg === 'Costa' ? 3 : 1.5,
+      }))
+    },
+    options: commonOpts
+  });
+}
+
+function renderArpuChurn() {
+  destroyChart('arpu-churn');
+  const points = [];
+  REGIONES.forEach(reg => {
+    MESES.forEach(mes => {
+      const r = getRow(mes, reg);
+      if (!r) return;
+      const revRiesgo = (r.churn || 0) * (r.sap_arpu || 0);
+      points.push({
+        label: `${reg} ${mes.split(' ')[0]}`,
+        region: reg,
+        x: r.sap_arpu,
+        y: r.tasa_churn,
+        r: Math.max(4, Math.min(30, Math.sqrt(revRiesgo) / 250))
+      });
+    });
+  });
+  const ctx = document.getElementById('chart-arpu-churn').getContext('2d');
+  charts['arpu-churn'] = new Chart(ctx, {
+    type: 'bubble',
+    data: {
+      datasets: REGIONES.map(reg => ({
+        label: reg,
+        data: points.filter(p => p.region === reg).map(p => ({ x: p.x, y: p.y, r: p.r, _label: p.label })),
+        backgroundColor: REGION_COLOR[reg] + '99',
+        borderColor: REGION_COLOR[reg],
+        borderWidth: 1,
+      }))
+    },
+    options: {
+      ...commonOpts,
+      scales: {
+        x: { ...commonOpts.scales.x, title: { display: true, text: 'ARPU (COP)', font: { size: 10 }, color: '#5F5E5A' } },
+        y: { ...commonOpts.scales.y, title: { display: true, text: 'Tasa de churn (%)', font: { size: 10 }, color: '#5F5E5A' } }
+      },
+      plugins: {
+        ...commonOpts.plugins,
+        tooltip: { callbacks: { label: ctx => `${ctx.raw._label}: ARPU $${fmt(ctx.raw.x)} · churn ${ctx.raw.y?.toFixed(2)}%` } }
+      }
+    }
+  });
+}
+
+function renderCCMotivo() {
+  destroyChart('cc-motivo');
+  const ctx = document.getElementById('chart-cc-motivo').getContext('2d');
+  charts['cc-motivo'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: MESES,
+      datasets: [
+        { label: 'Fallas de red', data: MESES.map(m => getRow(m, 'Nacional')?.cc_fallas), backgroundColor: PALETTE.redDark },
+        { label: 'Otras llamadas', data: MESES.map(m => { const r=getRow(m,'Nacional'); return r ? (r.cc_total - r.cc_fallas) : null; }), backgroundColor: PALETTE.grayLight },
+      ]
+    },
+    options: { ...commonOpts, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, stacked: true }, x: { ...commonOpts.scales.x, stacked: true } } }
+  });
+}
+
+function renderNPSEvol() {
+  destroyChart('nps-evol');
+  const ctx = document.getElementById('chart-nps-evol').getContext('2d');
+  const annotation = MESES.map(() => 38);
+  charts['nps-evol'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: MESES,
+      datasets: [
+        ...REGIONES.map(reg => ({
+          label: reg,
+          data: MESES.map(m => getRow(m, reg)?.nps),
+          borderColor: REGION_COLOR[reg],
+          backgroundColor: 'transparent',
+          tension: 0.3,
+          borderWidth: reg === 'Andina' || reg === 'Costa' ? 3 : 1.5,
+        })),
+        { label: 'Objetivo (38)', data: annotation, borderColor: PALETTE.grayDark, backgroundColor: 'transparent', borderDash: [4,4], borderWidth: 1.5, pointRadius: 0 }
+      ]
+    },
+    options: commonOpts
+  });
+}
+
+function renderDetMotivo() {
+  destroyChart('det-motivo');
+  const r = getRow('Ene 2025', 'Nacional');
+  const ctx = document.getElementById('chart-det-motivo').getContext('2d');
+  charts['det-motivo'] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Fallas de red', 'Atención', 'Precio'],
+      datasets: [{
+        data: [r.det_fallas, r.det_atencion, r.det_precio],
+        backgroundColor: [PALETTE.redDark, PALETTE.amberDark, PALETTE.tealDark],
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10, color: '#5F5E5A' } },
+        tooltip: { callbacks: { label: ctx => `${ctx.label}: ${fmt(ctx.parsed)} (${(ctx.parsed/(r.det_fallas+r.det_atencion+r.det_precio)*100).toFixed(1)}%)` } }
+      }
+    }
+  });
+}
+
+function renderDeltaNPS() {
+  destroyChart('delta-nps');
+  const npsMin = {};
+  REGIONES.forEach(reg => {
+    const vals = MESES.map(m => getRow(m, reg)?.nps).filter(v => v != null);
+    npsMin[reg] = Math.min(...vals);
+  });
+  const ctx = document.getElementById('chart-delta-nps').getContext('2d');
+  charts['delta-nps'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: REGIONES,
+      datasets: [
+        { label: 'NPS mínimo', data: REGIONES.map(r => npsMin[r]), backgroundColor: REGIONES.map(r => REGION_COLOR[r]+'CC') },
+        { label: 'Δ para llegar a 38', data: REGIONES.map(r => Math.max(0, 38 - npsMin[r])), backgroundColor: REGIONES.map(r => REGION_COLOR[r]+'44') },
+      ]
+    },
+    options: { ...commonOpts, scales: { ...commonOpts.scales, y: { ...commonOpts.scales.y, stacked: true, max: 50 }, x: { ...commonOpts.scales.x, stacked: true } } }
+  });
+}
+
+function renderCorrelaciones() {
+  destroyChart('correlaciones');
+  // Computar correlaciones simples con NPS nacional
+  function corr(metric) {
+    const nps = MESES.map(m => getRow(m, 'Nacional')?.nps);
+    const x = MESES.map(m => getRow(m, 'Nacional')?.[metric]);
+    const n = nps.length;
+    const sumX = x.reduce((a,b)=>a+b,0), sumY = nps.reduce((a,b)=>a+b,0);
+    const sumXY = x.reduce((a,b,i)=>a+b*nps[i],0);
+    const sumX2 = x.reduce((a,b)=>a+b*b,0), sumY2 = nps.reduce((a,b)=>a+b*b,0);
+    const num = n*sumXY - sumX*sumY;
+    const den = Math.sqrt((n*sumX2 - sumX*sumX) * (n*sumY2 - sumY*sumY));
+    return num / den;
+  }
+  const correlations = [
+    { name: '% Abandono App', val: corr('app_abandono') },
+    { name: 'Errores App x1000', val: corr('app_errores_x1000') },
+    { name: 'Llamadas CC fallas', val: corr('cc_fallas') },
+    { name: 'Usuarios afect. NOC', val: corr('noc_usuarios_afect') },
+    { name: 'T° resol. NOC', val: corr('noc_t_resol') },
+    { name: 'SLA NOC', val: corr('noc_sla') },
+    { name: 'Detractores fallas', val: corr('det_fallas') },
+  ].sort((a,b) => Math.abs(b.val) - Math.abs(a.val));
+
+  const ctx = document.getElementById('chart-correlaciones').getContext('2d');
+  charts['correlaciones'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: correlations.map(c => c.name),
+      datasets: [{
+        label: 'Correlación con NPS',
+        data: correlations.map(c => c.val),
+        backgroundColor: correlations.map(c => c.val < 0 ? PALETTE.redDark : PALETTE.greenDark),
+        borderRadius: 3
+      }]
+    },
+    options: {
+      ...commonOpts,
+      indexAxis: 'y',
+      scales: { ...commonOpts.scales, x: { ...commonOpts.scales.x, min: -1, max: 1 } },
+      plugins: { ...commonOpts.plugins, legend: { display: false } }
+    }
+  });
+}
+
+// =========== TABS ===========
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    renderAll();
+  });
+});
+
+// =========== FILTERS ===========
+function updatePill() {
+  const mes = document.getElementById('filter-mes').value;
+  const region = document.getElementById('filter-region').value;
+  document.getElementById('status-pill').textContent = `Vista activa: ${region} · ${mes}`;
+}
+
+document.getElementById('filter-mes').addEventListener('change', renderAll);
+document.getElementById('filter-region').addEventListener('change', renderAll);
+
+function renderAll() {
+  updatePill();
+  renderKPIs();
+  const activeTab = document.querySelector('.tab.active').dataset.tab;
+  setTimeout(() => {
+    if (activeTab === 'integrada') {
+      renderMatriz();
+      renderRevenueRiesgo();
+      renderCadena();
+      renderConversion();
+    } else if (activeTab === 'noc') {
+      renderHeatmaps();
+      renderSLAEvol();
+      renderUsuariosAfect();
+    } else if (activeTab === 'crm') {
+      renderChurnRegion();
+      renderTasaChurn();
+      renderArpuChurn();
+      renderCCMotivo();
+    } else if (activeTab === 'nps') {
+      renderNPSEvol();
+      renderDetMotivo();
+      renderDeltaNPS();
+      renderCorrelaciones();
+    }
+  }, 50);
+}
+
+renderAll();
+</script>
+</body>
+</html>
